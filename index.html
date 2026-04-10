@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Brand Globe — World's Iconic Brands</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: #04040b;
+      font-family: 'Outfit', system-ui, sans-serif;
+      color: #fff;
+      overflow: hidden;
+    }
+
+    /* ─── GLOBE CONTAINER ─── */
+    #globe-container {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+    }
+
+    /* ─── HEADER ─── */
+    #header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 10;
+      padding: 1.6rem 2rem 1rem;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      pointer-events: none;
+      background: linear-gradient(to bottom, rgba(4,4,11,0.8) 0%, transparent 100%);
+    }
+
+    .brand-title, .header-stats { pointer-events: none; }
+
+    .brand-title {
+      line-height: 1;
+    }
+
+    .brand-title h1 {
+      font-size: 1.45rem;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      background: linear-gradient(135deg, rgba(255,255,255,0.95) 30%, rgba(255,255,255,0.38));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .brand-title p {
+      font-size: 0.66rem;
+      font-weight: 400;
+      color: rgba(255,255,255,0.28);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-top: 5px;
+    }
+
+    @media (max-width: 700px) {
+      .brand-title p { display: none; }
+      #header { padding: 1.2rem 1.2rem 0.8rem; }
+      #search-wrap { top: 1rem; }
+      .hstat-label { display: none; }
+    }
+
+    .header-stats {
+      display: flex;
+      gap: 1.6rem;
+      align-items: flex-start;
+    }
+
+    .hstat { text-align: right; }
+    .hstat-value { font-size: 0.95rem; font-weight: 600; color: rgba(255,255,255,0.85); }
+    .hstat-label { font-size: 0.6rem; color: rgba(255,255,255,0.28); text-transform: uppercase; letter-spacing: 0.09em; margin-top: 1px; }
+
+    /* ─── HINT ─── */
+    #hint {
+      position: fixed;
+      bottom: 1.8rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      font-size: 0.63rem;
+      color: rgba(255,255,255,0.2);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    /* ─── BRAND MARKERS ─── */
+    .brand-marker {
+      position: relative;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: rgba(12,12,20,0.72);
+      border: 1px solid rgba(255,255,255,0.22);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      pointer-events: auto;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+      transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
+                  background 0.22s ease,
+                  border-color 0.22s ease,
+                  box-shadow 0.22s ease;
+      transform-origin: center;
+      will-change: transform;
+    }
+
+    .brand-marker::after {
+      content: '';
+      position: absolute;
+      inset: -5px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0);
+      transition: border-color 0.22s ease, inset 0.28s cubic-bezier(0.34,1.56,0.64,1);
+    }
+
+    .brand-marker:hover {
+      transform: scale(1.35);
+      background: rgba(255,255,255,0.13);
+      border-color: rgba(255,255,255,0.5);
+      box-shadow: 0 0 0 6px rgba(255,255,255,0.05), 0 4px 24px rgba(0,0,0,0.6), 0 0 18px rgba(255,255,255,0.15);
+      z-index: 100;
+    }
+
+    .brand-marker:hover::after {
+      border-color: rgba(255,255,255,0.08);
+    }
+
+    .brand-marker img {
+      width: 14px;
+      height: 14px;
+      object-fit: contain;
+      opacity: 0.95;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      filter: brightness(0) invert(1);
+    }
+
+    .brand-marker:hover img { opacity: 1; }
+
+    .brand-initials {
+      font-size: 0.55rem;
+      font-weight: 700;
+      color: rgba(255,255,255,0.75);
+      letter-spacing: 0.02em;
+      pointer-events: none;
+    }
+
+    /* ─── POPUP ─── */
+    #popup {
+      position: fixed;
+      z-index: 200;
+      width: 255px;
+      background: rgba(9,9,15,0.94);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 20px;
+      backdrop-filter: blur(28px) saturate(1.4);
+      -webkit-backdrop-filter: blur(28px) saturate(1.4);
+      padding: 0;
+      pointer-events: none;
+      overflow: hidden;
+      box-shadow: 0 32px 72px rgba(0,0,0,0.85), 0 0 0 0.5px rgba(255,255,255,0.05) inset;
+      opacity: 0;
+      visibility: hidden;
+      transform: scale(0.92) translateY(6px);
+      transition: opacity 0.2s ease, transform 0.22s ease, visibility 0.2s;
+    }
+
+    #popup.visible {
+      opacity: 1;
+      visibility: visible;
+      transform: scale(1) translateY(0);
+      pointer-events: auto;
+    }
+
+    #popup::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(140,180,255,0.35), rgba(255,255,255,0.2), transparent);
+    }
+
+    .popup-top {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 15px 15px 11px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .popup-logo-wrap {
+      width: 42px;
+      height: 42px;
+      border-radius: 11px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .popup-logo-wrap img {
+      width: 26px;
+      height: 26px;
+      object-fit: contain;
+      filter: none;
+    }
+
+    .popup-name {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: rgba(255,255,255,0.95);
+      letter-spacing: -0.015em;
+      line-height: 1.2;
+    }
+
+    .popup-country {
+      font-size: 0.69rem;
+      color: rgba(255,255,255,0.38);
+      margin-top: 3px;
+      letter-spacing: 0.01em;
+    }
+
+    .popup-rows {
+      padding: 11px 15px 13px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .popup-row {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      font-size: 0.74rem;
+    }
+
+    .popup-row-icon { display: none; }
+
+    .popup-row-label {
+      color: rgba(255,255,255,0.28);
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      width: 58px;
+      flex-shrink: 0;
+    }
+
+    .popup-row-value {
+      color: rgba(255,255,255,0.82);
+      font-weight: 500;
+      font-size: 0.75rem;
+    }
+
+    .popup-sector-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 9px;
+      border-radius: 999px;
+      font-size: 0.65rem;
+      font-weight: 600;
+      background: rgba(120,160,255,0.1);
+      color: rgba(180,210,255,0.8);
+      border: 1px solid rgba(120,160,255,0.15);
+    }
+
+    /* ─── SEARCH ─── */
+    #search-wrap {
+      position: fixed;
+      top: 1.3rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 20;
+      width: min(300px, 46vw);
+    }
+
+    #search-box {
+      display: flex;
+      align-items: center;
+      background: rgba(9,9,15,0.82);
+      border: 1px solid rgba(255,255,255,0.11);
+      border-radius: 50px;
+      padding: 0 14px;
+      gap: 8px;
+      backdrop-filter: blur(24px) saturate(1.3);
+      -webkit-backdrop-filter: blur(24px) saturate(1.3);
+      box-shadow: 0 8px 28px rgba(0,0,0,0.55), 0 0 0 0.5px rgba(255,255,255,0.04) inset;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    #search-box:focus-within {
+      border-color: rgba(160,200,255,0.28);
+      box-shadow: 0 8px 28px rgba(0,0,0,0.55), 0 0 0 3px rgba(100,160,255,0.07);
+    }
+
+    #search-icon {
+      font-size: 1rem;
+      color: rgba(255,255,255,0.35);
+      flex-shrink: 0;
+      line-height: 1;
+    }
+
+    #search-input {
+      flex: 1;
+      background: none;
+      border: none;
+      outline: none;
+      color: #fff;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.875rem;
+      font-weight: 400;
+      padding: 11px 0;
+      caret-color: rgba(255,255,255,0.6);
+    }
+
+    #search-input::placeholder { color: rgba(255,255,255,0.26); }
+
+    #search-clear {
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.3);
+      cursor: pointer;
+      font-size: 0.68rem;
+      padding: 4px;
+      line-height: 1;
+      display: none;
+      flex-shrink: 0;
+      transition: color 0.15s;
+    }
+    #search-clear:hover { color: rgba(255,255,255,0.7); }
+    #search-clear.visible { display: block; }
+
+    #search-results {
+      margin-top: 6px;
+      background: rgba(10,10,14,0.94);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 16px;
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      overflow: hidden;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.65);
+      display: none;
+    }
+    #search-results.open { display: block; }
+
+    .sr-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 14px;
+      cursor: pointer;
+      transition: background 0.12s;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .sr-item:last-child { border-bottom: none; }
+    .sr-item:hover { background: rgba(255,255,255,0.07); }
+
+    .sr-logo {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .sr-logo img { width: 18px; height: 18px; object-fit: contain; filter: none; }
+    .sr-logo-initials { font-size: 0.55rem; font-weight: 700; color: rgba(255,255,255,0.7); }
+
+    .sr-info { flex: 1; min-width: 0; }
+    .sr-name { font-size: 0.82rem; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sr-meta { font-size: 0.67rem; color: rgba(255,255,255,0.38); margin-top: 1px; }
+
+    .sr-empty {
+      padding: 14px 16px;
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.3);
+      text-align: center;
+    }
+
+
+
+    /* Grain overlay */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: 9998;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+      opacity: 0.5;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Globe canvas -->
+<div id="globe-container"></div>
+
+<!-- Header -->
+<div id="header">
+  <div class="brand-title">
+    <h1>Brand Globe</h1>
+    <p>World's iconic brands mapped</p>
+  </div>
+  <div class="header-stats">
+    <div class="hstat">
+      <div class="hstat-value">150+</div>
+      <div class="hstat-label">Brands</div>
+    </div>
+    <div class="hstat">
+      <div class="hstat-value">100+</div>
+      <div class="hstat-label">Countries</div>
+    </div>
+  </div>
+</div>
+
+<!-- Search -->
+<div id="search-wrap">
+  <div id="search-box">
+    <span id="search-icon">&#9906;</span>
+    <input id="search-input" type="text" placeholder="Search brand or country…" autocomplete="off" spellcheck="false" />
+    <button id="search-clear" aria-label="Clear">✕</button>
+  </div>
+  <div id="search-results"></div>
+</div>
+
+<!-- Bottom hint -->
+<div id="hint">Drag to rotate &nbsp;·&nbsp; Scroll to zoom &nbsp;·&nbsp; Hover brands</div>
+
+<!-- Popup -->
+<div id="popup">
+  <div class="popup-top">
+    <div class="popup-logo-wrap">
+      <img id="popup-logo" src="" alt="" />
+    </div>
+    <div class="popup-header-text">
+      <div class="popup-name" id="popup-name"></div>
+      <div class="popup-country" id="popup-country"></div>
+    </div>
+  </div>
+  <div class="popup-rows">
+    <div class="popup-row">
+      <span class="popup-row-icon">⚙</span>
+      <span class="popup-row-label">Sector</span>
+      <span class="popup-row-value"><span class="popup-sector-badge" id="popup-sector"></span></span>
+    </div>
+    <div class="popup-row">
+      <span class="popup-row-icon">🏢</span>
+      <span class="popup-row-label">HQ</span>
+      <span class="popup-row-value" id="popup-hq"></span>
+    </div>
+    <div class="popup-row">
+      <span class="popup-row-icon">📅</span>
+      <span class="popup-row-label">Founded</span>
+      <span class="popup-row-value" id="popup-founded"></span>
+    </div>
+    <div class="popup-row">
+      <span class="popup-row-icon">💰</span>
+      <span class="popup-row-label">Revenue</span>
+      <span class="popup-row-value" id="popup-revenue"></span>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/globe.gl@2.30.0/dist/globe.gl.min.js"></script>
+<script>
+// ─────────────────────────────────────────────────────────────
+//  BRAND DATA
+// ─────────────────────────────────────────────────────────────
+const brands = [
+  // ── USA ──
+  { name:"Apple",        icon:"apple",             lat:37.335,  lng:-122.030, country:"USA",                flag:"🇺🇸", sector:"Technology",      hq:"Cupertino, CA",          founded:1976, revenue:"$394B"  },
+  { name:"Microsoft",    icon:"microsoft",         lat:47.642,  lng:-122.130, country:"USA",                flag:"🇺🇸", sector:"Technology",      hq:"Redmond, WA",            founded:1975, revenue:"$212B"  },
+  { name:"Amazon",       icon:"amazon",            lat:47.610,  lng:-122.342, country:"USA",                flag:"🇺🇸", sector:"E-Commerce",      hq:"Seattle, WA",            founded:1994, revenue:"$575B"  },
+
+  // ── Canada ──
+  { name:"Shopify",      icon:"shopify",           lat:45.424,  lng:-75.699,  country:"Canada",             flag:"🇨🇦", sector:"E-Commerce",      hq:"Ottawa, ON",             founded:2006, revenue:"$7.1B"  },
+  { name:"RBC",          icon:"rbc",               lat:43.651,  lng:-79.381,  country:"Canada",             flag:"🇨🇦", sector:"Finance",         hq:"Toronto, ON",            founded:1864, revenue:"$49B"   },
+
+  // ── Mexico ──
+  { name:"Bimbo",        icon:"grupobimbo",        lat:19.428,  lng:-99.128,  country:"Mexico",             flag:"🇲🇽", sector:"Food",            hq:"Mexico City",            founded:1945, revenue:"$17B"   },
+
+  // ── Brazil ──
+  { name:"Petrobras",    icon:"petrobras",         lat:-22.900, lng:-43.180,  country:"Brazil",             flag:"🇧🇷", sector:"Energy",          hq:"Rio de Janeiro",         founded:1953, revenue:"$124B"  },
+  { name:"Natura",       icon:"natura",            lat:-23.550, lng:-46.634,  country:"Brazil",             flag:"🇧🇷", sector:"Cosmetics",       hq:"São Paulo",              founded:1969, revenue:"$3.4B"  },
+
+  // ── Argentina ──
+  { name:"YPF",          icon:"ypf",               lat:-34.604, lng:-58.382,  country:"Argentina",          flag:"🇦🇷", sector:"Energy",          hq:"Buenos Aires",           founded:1922, revenue:"$16B"   },
+
+  // ── UK ──
+  { name:"HSBC",         icon:"hsbc",              lat:51.514,  lng:-0.090,   country:"UK",                 flag:"🇬🇧", sector:"Finance",         hq:"London",                 founded:1865, revenue:"$51B"   },
+  { name:"Unilever",     icon:"unilever",          lat:51.498,  lng:-0.080,   country:"UK",                 flag:"🇬🇧", sector:"Consumer Goods",  hq:"London",                 founded:1929, revenue:"$62B"   },
+
+  // ── Germany ──
+  { name:"BMW",          icon:"bmw",               lat:48.177,  lng:11.551,   country:"Germany",            flag:"🇩🇪", sector:"Automotive",      hq:"Munich",                 founded:1916, revenue:"$160B"  },
+  { name:"SAP",          icon:"sap",               lat:49.294,  lng:8.642,    country:"Germany",            flag:"🇩🇪", sector:"Technology",      hq:"Walldorf",               founded:1972, revenue:"$33B"   },
+
+  // ── France ──
+  { name:"Louis Vuitton",icon:"louisvuitton",      lat:48.866,  lng:2.340,    country:"France",             flag:"🇫🇷", sector:"Luxury",          hq:"Paris",                  founded:1854, revenue:"$20B"   },
+  { name:"Chanel",       icon:"chanel",            lat:48.878,  lng:2.361,    country:"France",             flag:"🇫🇷", sector:"Luxury",          hq:"Paris",                  founded:1910, revenue:"$17B"   },
+
+  // ── Italy ──
+  { name:"Ferrari",      icon:"ferrari",           lat:44.534,  lng:10.863,   country:"Italy",              flag:"🇮🇹", sector:"Automotive",      hq:"Maranello",              founded:1939, revenue:"$5.5B"  },
+  { name:"Gucci",        icon:"gucci",             lat:43.783,  lng:11.243,   country:"Italy",              flag:"🇮🇹", sector:"Luxury",          hq:"Florence",               founded:1921, revenue:"$10B"   },
+
+  // ── Spain ──
+  { name:"Zara",         icon:"zara",              lat:43.342,  lng:-8.411,   country:"Spain",              flag:"🇪🇸", sector:"Fashion",         hq:"A Coruña",               founded:1975, revenue:"$32B"   },
+  { name:"BBVA",         icon:"bbva",              lat:43.263,  lng:-2.935,   country:"Spain",              flag:"🇪🇸", sector:"Finance",         hq:"Bilbao",                 founded:1857, revenue:"$25B"   },
+
+  // ── Netherlands ──
+  { name:"Shell",        icon:"shell",             lat:52.370,  lng:4.890,    country:"Netherlands",        flag:"🇳🇱", sector:"Energy",          hq:"The Hague",              founded:1907, revenue:"$381B"  },
+  { name:"Philips",      icon:"philips",           lat:51.441,  lng:5.469,    country:"Netherlands",        flag:"🇳🇱", sector:"Technology",      hq:"Amsterdam",              founded:1891, revenue:"$18B"   },
+
+  // ── Switzerland ──
+  { name:"Nestlé",       icon:"nestle",            lat:46.647,  lng:6.848,    country:"Switzerland",        flag:"🇨🇭", sector:"Food",            hq:"Vevey",                  founded:1866, revenue:"$95B"   },
+  { name:"Rolex",        icon:"rolex",             lat:46.204,  lng:6.142,    country:"Switzerland",        flag:"🇨🇭", sector:"Luxury",          hq:"Geneva",                 founded:1905, revenue:"$10B"   },
+
+  // ── Sweden ──
+  { name:"IKEA",         icon:"ikea",              lat:55.604,  lng:13.403,   country:"Sweden",             flag:"🇸🇪", sector:"Retail",          hq:"Malmö",                  founded:1943, revenue:"$47B"   },
+  { name:"Volvo",        icon:"volvo",             lat:57.706,  lng:11.987,   country:"Sweden",             flag:"🇸🇪", sector:"Automotive",      hq:"Gothenburg",             founded:1927, revenue:"$45B"   },
+
+  // ── Norway ──
+  { name:"Equinor",      icon:"equinor",           lat:58.972,  lng:5.733,    country:"Norway",             flag:"🇳🇴", sector:"Energy",          hq:"Stavanger",              founded:1972, revenue:"$165B"  },
+
+  // ── Denmark ──
+  { name:"Maersk",       icon:"maersk",            lat:55.682,  lng:12.567,   country:"Denmark",            flag:"🇩🇰", sector:"Shipping",        hq:"Copenhagen",             founded:1904, revenue:"$81B"   },
+
+  // ── Finland ──
+  { name:"Nokia",        icon:"nokia",             lat:60.225,  lng:24.929,   country:"Finland",            flag:"🇫🇮", sector:"Technology",      hq:"Espoo",                  founded:1865, revenue:"$25B"   },
+
+  // ── Russia ──
+  { name:"Gazprom",      icon:"gazprom",           lat:55.755,  lng:37.617,   country:"Russia",             flag:"🇷🇺", sector:"Energy",          hq:"Moscow",                 founded:1989, revenue:"$122B"  },
+
+  // ── Poland ──
+  { name:"PKN Orlen",    icon:"pknotlen",          lat:52.237,  lng:21.017,   country:"Poland",             flag:"🇵🇱", sector:"Energy",          hq:"Warsaw",                 founded:1999, revenue:"$47B"   },
+
+  // ── Turkey ──
+  { name:"Turkish Airlines",icon:"turkishairlines",lat:40.982,  lng:28.820,   country:"Turkey",             flag:"🇹🇷", sector:"Aviation",        hq:"Istanbul",               founded:1933, revenue:"$18B"   },
+
+  // ── Saudi Arabia ──
+  { name:"Aramco",       icon:"saudiaramco",       lat:26.388,  lng:50.200,   country:"Saudi Arabia",       flag:"🇸🇦", sector:"Energy",          hq:"Dhahran",                founded:1933, revenue:"$604B"  },
+
+  // ── UAE ──
+  { name:"Emirates",     icon:"emirates",          lat:25.252,  lng:55.364,   country:"UAE",                flag:"🇦🇪", sector:"Aviation",        hq:"Dubai",                  founded:1985, revenue:"$34B"   },
+
+  // ── Qatar ──
+  { name:"Qatar Airways",icon:"qatarairways",      lat:25.276,  lng:51.520,   country:"Qatar",              flag:"🇶🇦", sector:"Aviation",        hq:"Doha",                   founded:1994, revenue:"$23B"   },
+
+  // ── Israel ──
+  { name:"Check Point",  icon:"checkpoint",        lat:32.080,  lng:34.782,   country:"Israel",             flag:"🇮🇱", sector:"Cybersecurity",   hq:"Tel Aviv",               founded:1993, revenue:"$2.4B"  },
+
+  // ── India — Mumbai ──
+  { name:"Tata",              icon:"tata",              lat:18.922,  lng:72.834,   country:"India", flag:"🇮🇳", sector:"Conglomerate",    hq:"Mumbai",           founded:1868, revenue:"$150B"  },
+  { name:"Reliance",          icon:"reliance",          lat:19.076,  lng:72.878,   country:"India", flag:"🇮🇳", sector:"Conglomerate",    hq:"Mumbai",           founded:1966, revenue:"$104B"  },
+  { name:"HDFC Bank",         icon:"hdfcbank",          lat:18.960,  lng:72.820,   country:"India", flag:"🇮🇳", sector:"Finance",         hq:"Mumbai",           founded:1994, revenue:"$24B"   },
+  { name:"ICICI Bank",        icon:"icicibank",         lat:18.890,  lng:72.855,   country:"India", flag:"🇮🇳", sector:"Finance",         hq:"Mumbai",           founded:1994, revenue:"$18B"   },
+  { name:"Mahindra",          icon:"mahindra",          lat:19.050,  lng:72.860,   country:"India", flag:"🇮🇳", sector:"Automotive",      hq:"Mumbai",           founded:1945, revenue:"$21B"   },
+  { name:"Asian Paints",      icon:"asianpaints",       lat:19.000,  lng:72.760,   country:"India", flag:"🇮🇳", sector:"Manufacturing",   hq:"Mumbai",           founded:1942, revenue:"$4.2B"  },
+  { name:"Hindustan Unilever",icon:"hindustanunilever", lat:18.940,  lng:72.800,   country:"India", flag:"🇮🇳", sector:"Consumer Goods",  hq:"Mumbai",           founded:1933, revenue:"$7.3B"  },
+  // ── India — Bengaluru ──
+  { name:"Infosys",           icon:"infosys",           lat:12.970,  lng:77.595,   country:"India", flag:"🇮🇳", sector:"Technology",      hq:"Bengaluru",        founded:1981, revenue:"$18B"   },
+  { name:"Wipro",             icon:"wipro",             lat:12.990,  lng:77.540,   country:"India", flag:"🇮🇳", sector:"Technology",      hq:"Bengaluru",        founded:1945, revenue:"$11B"   },
+  { name:"Flipkart",          icon:"flipkart",          lat:13.010,  lng:77.620,   country:"India", flag:"🇮🇳", sector:"E-Commerce",      hq:"Bengaluru",        founded:2007, revenue:"$8.0B"  },
+  { name:"Ola",               icon:"ola",               lat:12.940,  lng:77.570,   country:"India", flag:"🇮🇳", sector:"Transport",       hq:"Bengaluru",        founded:2010, revenue:"$0.7B"  },
+  // ── India — Delhi / NCR ──
+  { name:"Airtel",            icon:"airtel",            lat:28.640,  lng:77.220,   country:"India", flag:"🇮🇳", sector:"Telecom",         hq:"New Delhi",        founded:1995, revenue:"$16B"   },
+  { name:"Hero MotoCorp",     icon:"heromotocorp",      lat:28.700,  lng:77.180,   country:"India", flag:"🇮🇳", sector:"Automotive",      hq:"New Delhi",        founded:1984, revenue:"$4.9B"  },
+  { name:"HCL Technologies",  icon:"hcl",               lat:28.600,  lng:77.370,   country:"India", flag:"🇮🇳", sector:"Technology",      hq:"Noida",            founded:1976, revenue:"$13B"   },
+  { name:"Paytm",             icon:"paytm",             lat:28.580,  lng:77.320,   country:"India", flag:"🇮🇳", sector:"Fintech",         hq:"Noida",            founded:2010, revenue:"$1.0B"  },
+  { name:"Zomato",            icon:"zomato",            lat:28.460,  lng:77.030,   country:"India", flag:"🇮🇳", sector:"Food Tech",       hq:"Gurugram",         founded:2008, revenue:"$1.1B"  },
+  { name:"Maruti Suzuki",     icon:"marutisuzuki",      lat:28.440,  lng:77.010,   country:"India", flag:"🇮🇳", sector:"Automotive",      hq:"Gurugram",         founded:1981, revenue:"$14B"   },
+  // ── India — Pune ──
+  { name:"Bajaj Auto",        icon:"bajajauto",         lat:18.520,  lng:73.856,   country:"India", flag:"🇮🇳", sector:"Automotive",      hq:"Pune",             founded:1945, revenue:"$5.5B"  },
+  // ── India — Gujarat ──
+  { name:"Amul",              icon:"amul",              lat:22.557,  lng:72.952,   country:"India", flag:"🇮🇳", sector:"Dairy",           hq:"Anand, Gujarat",   founded:1946, revenue:"$9.0B"  },
+  // ── India — Kolkata ──
+  { name:"ITC",               icon:"itchotelsgroup",    lat:22.572,  lng:88.363,   country:"India", flag:"🇮🇳", sector:"Conglomerate",    hq:"Kolkata",          founded:1910, revenue:"$8.2B"  },
+
+  // ── Pakistan ──
+  { name:"HBL",          icon:"hbl",               lat:24.860,  lng:67.010,   country:"Pakistan",           flag:"🇵🇰", sector:"Finance",         hq:"Karachi",                founded:1941, revenue:"$2.3B"  },
+
+  // ── Bangladesh ──
+  { name:"Grameenphone", icon:"grameenphone",      lat:23.810,  lng:90.412,   country:"Bangladesh",         flag:"🇧🇩", sector:"Telecom",         hq:"Dhaka",                  founded:1997, revenue:"$0.7B"  },
+
+  // ── China ──
+  { name:"Huawei",       icon:"huawei",            lat:22.583,  lng:114.065,  country:"China",              flag:"🇨🇳", sector:"Technology",      hq:"Shenzhen",               founded:1987, revenue:"$99B"   },
+  { name:"Alibaba",      icon:"alibaba",           lat:30.274,  lng:120.155,  country:"China",              flag:"🇨🇳", sector:"E-Commerce",      hq:"Hangzhou",               founded:1999, revenue:"$130B"  },
+
+  // ── Japan ──
+  { name:"Toyota",       icon:"toyota",            lat:35.083,  lng:137.158,  country:"Japan",              flag:"🇯🇵", sector:"Automotive",      hq:"Toyota City",            founded:1937, revenue:"$274B"  },
+  { name:"Sony",         icon:"sony",              lat:35.670,  lng:139.743,  country:"Japan",              flag:"🇯🇵", sector:"Technology",      hq:"Tokyo",                  founded:1946, revenue:"$89B"   },
+
+  // ── South Korea ──
+  { name:"Samsung",      icon:"samsung",           lat:37.512,  lng:127.063,  country:"South Korea",        flag:"🇰🇷", sector:"Technology",      hq:"Seoul",                  founded:1938, revenue:"$244B"  },
+  { name:"Hyundai",      icon:"hyundai",           lat:37.380,  lng:127.100,  country:"South Korea",        flag:"🇰🇷", sector:"Automotive",      hq:"Seoul",                  founded:1967, revenue:"$160B"  },
+
+  // ── Indonesia ──
+  { name:"Gojek",        icon:"gojek",             lat:-6.175,  lng:106.827,  country:"Indonesia",          flag:"🇮🇩", sector:"Technology",      hq:"Jakarta",                founded:2010, revenue:"$1.8B"  },
+
+  // ── Thailand ──
+  { name:"PTT",          icon:"ptt",               lat:13.756,  lng:100.502,  country:"Thailand",           flag:"🇹🇭", sector:"Energy",          hq:"Bangkok",                founded:1978, revenue:"$72B"   },
+
+  // ── Vietnam ──
+  { name:"Viettel",      icon:"viettel",           lat:21.028,  lng:105.834,  country:"Vietnam",            flag:"🇻🇳", sector:"Telecom",         hq:"Hanoi",                  founded:1989, revenue:"$7.3B"  },
+
+  // ── Philippines ──
+  { name:"SM Investments",icon:"sminvestments",    lat:14.599,  lng:120.984,  country:"Philippines",        flag:"🇵🇭", sector:"Conglomerate",    hq:"Manila",                 founded:1958, revenue:"$5.2B"  },
+
+  // ── Malaysia ──
+  { name:"Petronas",     icon:"petronas",          lat:3.158,   lng:101.711,  country:"Malaysia",           flag:"🇲🇾", sector:"Energy",          hq:"Kuala Lumpur",           founded:1974, revenue:"$59B"   },
+
+  // ── Singapore ──
+  { name:"DBS",          icon:"dbs",               lat:1.283,   lng:103.860,  country:"Singapore",          flag:"🇸🇬", sector:"Finance",         hq:"Singapore",              founded:1968, revenue:"$19B"   },
+
+  // ── Sri Lanka ──
+  { name:"Dialog Axiata",icon:"dialog",            lat:6.927,   lng:79.861,   country:"Sri Lanka",          flag:"🇱🇰", sector:"Telecom",         hq:"Colombo",                founded:1993, revenue:"$0.4B"  },
+
+  // ── Nepal ──
+  { name:"Ncell",        icon:"ncell",             lat:27.717,  lng:85.315,   country:"Nepal",              flag:"🇳🇵", sector:"Telecom",         hq:"Kathmandu",              founded:2004, revenue:"$0.3B"  },
+
+  // ── Kazakhstan ──
+  { name:"KazMunayGas",  icon:"kazmunaygas",       lat:51.180,  lng:71.446,   country:"Kazakhstan",         flag:"🇰🇿", sector:"Energy",          hq:"Astana",                 founded:2002, revenue:"$24B"   },
+
+  // ── Uzbekistan ──
+  { name:"Ucell",        icon:"ucell",             lat:41.299,  lng:69.240,   country:"Uzbekistan",         flag:"🇺🇿", sector:"Telecom",         hq:"Tashkent",               founded:1996, revenue:"$0.5B"  },
+
+  // ── Iran ──
+  { name:"Irancell",     icon:"irancell",          lat:35.694,  lng:51.421,   country:"Iran",               flag:"🇮🇷", sector:"Telecom",         hq:"Tehran",                 founded:2006, revenue:"$1.2B"  },
+
+  // ── Iraq ──
+  { name:"Asiacell",     icon:"asiacell",          lat:33.340,  lng:44.401,   country:"Iraq",               flag:"🇮🇶", sector:"Telecom",         hq:"Baghdad",                founded:1999, revenue:"$0.6B"  },
+
+  // ── Egypt ──
+  { name:"Orascom",      icon:"orascom",           lat:30.056,  lng:31.235,   country:"Egypt",              flag:"🇪🇬", sector:"Conglomerate",    hq:"Cairo",                  founded:1976, revenue:"$2.1B"  },
+
+  // ── South Africa ──
+  { name:"MTN",          icon:"mtn",               lat:-26.205, lng:28.050,   country:"South Africa",       flag:"🇿🇦", sector:"Telecom",         hq:"Johannesburg",           founded:1994, revenue:"$12B"   },
+  { name:"Naspers",      icon:"naspers",           lat:-33.925, lng:18.424,   country:"South Africa",       flag:"🇿🇦", sector:"Media",           hq:"Cape Town",              founded:1915, revenue:"$6.3B"  },
+
+  // ── Nigeria ──
+  { name:"Dangote",      icon:"dangote",           lat:6.524,   lng:3.379,    country:"Nigeria",            flag:"🇳🇬", sector:"Conglomerate",    hq:"Lagos",                  founded:1977, revenue:"$4.9B"  },
+  { name:"GTBank",       icon:"gtbank",            lat:6.600,   lng:3.350,    country:"Nigeria",            flag:"🇳🇬", sector:"Finance",         hq:"Lagos",                  founded:1990, revenue:"$0.8B"  },
+
+  // ── Kenya ──
+  { name:"Safaricom",    icon:"safaricom",         lat:-1.286,  lng:36.817,   country:"Kenya",              flag:"🇰🇪", sector:"Telecom",         hq:"Nairobi",                founded:1997, revenue:"$2.8B"  },
+
+  // ── Ethiopia ──
+  { name:"Ethiopian Airlines",icon:"ethiopianairlines",lat:9.012,lng:38.731,  country:"Ethiopia",           flag:"🇪🇹", sector:"Aviation",        hq:"Addis Ababa",            founded:1945, revenue:"$5.4B"  },
+
+  // ── Ghana ──
+  { name:"MTN Ghana",    icon:"mtn",               lat:5.603,   lng:-0.187,   country:"Ghana",              flag:"🇬🇭", sector:"Telecom",         hq:"Accra",                  founded:1996, revenue:"$0.8B"  },
+
+  // ── Morocco ──
+  { name:"OCP Group",    icon:"ocpgroup",          lat:33.990,  lng:-6.855,   country:"Morocco",            flag:"🇲🇦", sector:"Mining",          hq:"Rabat",                  founded:1920, revenue:"$9.5B"  },
+
+  // ── Algeria ──
+  { name:"Sonatrach",    icon:"sonatrach",         lat:36.737,  lng:3.086,    country:"Algeria",            flag:"🇩🇿", sector:"Energy",          hq:"Algiers",                founded:1963, revenue:"$34B"   },
+
+  // ── Tunisia ──
+  { name:"Telnet",       icon:"telnet",            lat:36.892,  lng:10.180,   country:"Tunisia",            flag:"🇹🇳", sector:"Technology",      hq:"Tunis",                  founded:1993, revenue:"$0.1B"  },
+
+  // ── Uganda ──
+  { name:"MTN Uganda",   icon:"mtn",               lat:0.347,   lng:32.583,   country:"Uganda",             flag:"🇺🇬", sector:"Telecom",         hq:"Kampala",                founded:1998, revenue:"$0.6B"  },
+
+  // ── Tanzania ──
+  { name:"Azam",         icon:"azam",              lat:-6.792,  lng:39.209,   country:"Tanzania",           flag:"🇹🇿", sector:"Media",           hq:"Dar es Salaam",          founded:2005, revenue:"$0.5B"  },
+
+  // ── Rwanda ──
+  { name:"MTN Rwanda",   icon:"mtn",               lat:-1.944,  lng:30.062,   country:"Rwanda",             flag:"🇷🇼", sector:"Telecom",         hq:"Kigali",                 founded:1998, revenue:"$0.3B"  },
+
+  // ── Zimbabwe ──
+  { name:"Econet",       icon:"econet",            lat:-17.828, lng:31.053,   country:"Zimbabwe",           flag:"🇿🇼", sector:"Telecom",         hq:"Harare",                 founded:1993, revenue:"$0.5B"  },
+
+  // ── Zambia ──
+  { name:"Zesco",        icon:"zesco",             lat:-15.416, lng:28.283,   country:"Zambia",             flag:"🇿🇲", sector:"Energy",          hq:"Lusaka",                 founded:1970, revenue:"$0.8B"  },
+
+  // ── Botswana ──
+  { name:"Debswana",     icon:"debswana",          lat:-24.653, lng:25.906,   country:"Botswana",           flag:"🇧🇼", sector:"Mining",          hq:"Gaborone",               founded:1969, revenue:"$2.5B"  },
+
+  // ── Namibia ──
+  { name:"Namdeb",       icon:"namdeb",            lat:-22.559, lng:17.084,   country:"Namibia",            flag:"🇳🇦", sector:"Mining",          hq:"Windhoek",               founded:1994, revenue:"$0.6B"  },
+
+  // ── Angola ──
+  { name:"Sonangol",     icon:"sonangol",          lat:-8.838,  lng:13.234,   country:"Angola",             flag:"🇦🇴", sector:"Energy",          hq:"Luanda",                 founded:1976, revenue:"$24B"   },
+
+  // ── Mozambique ──
+  { name:"Movitel",      icon:"movitel",           lat:-25.966, lng:32.583,   country:"Mozambique",         flag:"🇲🇿", sector:"Telecom",         hq:"Maputo",                 founded:2012, revenue:"$0.2B"  },
+
+  // ── Madagascar ──
+  { name:"TELMA",        icon:"telma",             lat:-18.914, lng:47.536,   country:"Madagascar",         flag:"🇲🇬", sector:"Telecom",         hq:"Antananarivo",           founded:1991, revenue:"$0.1B"  },
+
+  // ── Australia ──
+  { name:"BHP",          icon:"bhp",               lat:-31.950, lng:115.860,  country:"Australia",          flag:"🇦🇺", sector:"Mining",          hq:"Perth",                  founded:1885, revenue:"$65B"   },
+  { name:"Qantas",       icon:"qantas",            lat:-33.868, lng:151.207,  country:"Australia",          flag:"🇦🇺", sector:"Aviation",        hq:"Sydney",                 founded:1920, revenue:"$17B"   },
+
+  // ── New Zealand ──
+  { name:"Fonterra",     icon:"fonterra",          lat:-36.867, lng:174.767,  country:"New Zealand",        flag:"🇳🇿", sector:"Dairy",           hq:"Auckland",               founded:2001, revenue:"$16B"   },
+
+  // ── Papua New Guinea ──
+  { name:"Digicel PNG",  icon:"digicel",           lat:-9.443,  lng:147.180,  country:"Papua New Guinea",   flag:"🇵🇬", sector:"Telecom",         hq:"Port Moresby",           founded:2007, revenue:"$0.3B"  },
+
+  // ── Fiji ──
+  { name:"Fiji Airways", icon:"fijiairways",       lat:-18.141, lng:178.432,  country:"Fiji",               flag:"🇫🇯", sector:"Aviation",        hq:"Nadi",                   founded:1951, revenue:"$0.4B"  },
+
+  // ── Samoa ──
+  { name:"Digicel Samoa",icon:"digicel",           lat:-13.759, lng:-172.105, country:"Samoa",              flag:"🇼🇸", sector:"Telecom",         hq:"Apia",                   founded:2006, revenue:"$0.1B"  },
+
+  // ── Chile ──
+  { name:"Codelco",      icon:"codelco",           lat:-33.456, lng:-70.648,  country:"Chile",              flag:"🇨🇱", sector:"Mining",          hq:"Santiago",               founded:1976, revenue:"$18B"   },
+
+  // ── Peru ──
+  { name:"Credicorp",    icon:"credicorp",         lat:-12.046, lng:-77.043,  country:"Peru",               flag:"🇵🇪", sector:"Finance",         hq:"Lima",                   founded:1995, revenue:"$5.3B"  },
+
+  // ── Colombia ──
+  { name:"Ecopetrol",    icon:"ecopetrol",         lat:4.711,   lng:-74.072,  country:"Colombia",           flag:"🇨🇴", sector:"Energy",          hq:"Bogotá",                 founded:1951, revenue:"$27B"   },
+
+  // ── Venezuela ──
+  { name:"PDVSA",        icon:"pdvsa",             lat:10.480,  lng:-66.914,  country:"Venezuela",          flag:"🇻🇪", sector:"Energy",          hq:"Caracas",                founded:1976, revenue:"$25B"   },
+
+  // ── Ecuador ──
+  { name:"Petroamazonas",icon:"petroamazonas",     lat:-0.180,  lng:-78.467,  country:"Ecuador",            flag:"🇪🇨", sector:"Energy",          hq:"Quito",                  founded:2010, revenue:"$3.2B"  },
+
+  // ── Bolivia ──
+  { name:"YPFB",         icon:"ypfb",              lat:-16.489, lng:-68.119,  country:"Bolivia",            flag:"🇧🇴", sector:"Energy",          hq:"La Paz",                 founded:1936, revenue:"$2.1B"  },
+
+  // ── Paraguay ──
+  { name:"Tigo Paraguay",icon:"tigo",              lat:-25.286, lng:-57.647,  country:"Paraguay",           flag:"🇵🇾", sector:"Telecom",         hq:"Asunción",               founded:2012, revenue:"$0.5B"  },
+
+  // ── Uruguay ──
+  { name:"Antel",        icon:"antel",             lat:-34.901, lng:-56.164,  country:"Uruguay",            flag:"🇺🇾", sector:"Telecom",         hq:"Montevideo",             founded:1974, revenue:"$1.1B"  },
+
+  // ── Costa Rica ──
+  { name:"ICE",          icon:"ice",               lat:9.933,   lng:-84.083,  country:"Costa Rica",         flag:"🇨🇷", sector:"Telecom",         hq:"San José",               founded:1949, revenue:"$1.0B"  },
+
+  // ── Panama ──
+  { name:"Copa Airlines",icon:"copaairlines",      lat:8.994,   lng:-79.519,  country:"Panama",             flag:"🇵🇦", sector:"Aviation",        hq:"Panama City",            founded:1947, revenue:"$2.9B"  },
+
+  // ── Guatemala ──
+  { name:"Banrural",     icon:"banrural",          lat:14.641,  lng:-90.513,  country:"Guatemala",          flag:"🇬🇹", sector:"Finance",         hq:"Guatemala City",         founded:1998, revenue:"$0.9B"  },
+
+  // ── Honduras ──
+  { name:"Tigo Honduras",icon:"tigo",              lat:14.083,  lng:-87.207,  country:"Honduras",           flag:"🇭🇳", sector:"Telecom",         hq:"Tegucigalpa",            founded:1996, revenue:"$0.4B"  },
+
+  // ── El Salvador ──
+  { name:"Avianca",      icon:"avianca",           lat:13.699,  lng:-89.191,  country:"El Salvador",        flag:"🇸🇻", sector:"Aviation",        hq:"San Salvador",           founded:1919, revenue:"$3.5B"  },
+
+  // ── Nicaragua ──
+  { name:"Claro",        icon:"claro",             lat:12.136,  lng:-86.313,  country:"Nicaragua",          flag:"🇳🇮", sector:"Telecom",         hq:"Managua",                founded:2000, revenue:"$0.5B"  },
+
+  // ── Dominican Republic ──
+  { name:"Claro DR",     icon:"claro",             lat:18.479,  lng:-69.892,  country:"Dominican Republic", flag:"🇩🇴", sector:"Telecom",         hq:"Santo Domingo",          founded:2000, revenue:"$0.7B"  },
+
+  // ── Cuba ──
+  { name:"Cubacel",      icon:"cubacel",           lat:23.114,  lng:-82.370,  country:"Cuba",               flag:"🇨🇺", sector:"Telecom",         hq:"Havana",                 founded:1994, revenue:"$0.3B"  },
+
+  // ── Jamaica ──
+  { name:"Digicel Jamaica",icon:"digicel",         lat:17.997,  lng:-76.793,  country:"Jamaica",            flag:"🇯🇲", sector:"Telecom",         hq:"Kingston",               founded:2001, revenue:"$0.4B"  },
+
+  // ── Iceland ──
+  { name:"Wow Air",      icon:"wowair",            lat:64.156,  lng:-21.942,  country:"Iceland",            flag:"🇮🇸", sector:"Aviation",        hq:"Reykjavík",              founded:2011, revenue:"$0.2B"  },
+
+  // ── Ireland ──
+  { name:"Ryanair",      icon:"ryanair",           lat:53.339,  lng:-6.257,   country:"Ireland",            flag:"🇮🇪", sector:"Aviation",        hq:"Dublin",                 founded:1984, revenue:"$10B"   },
+
+  // ── Portugal ──
+  { name:"EDP",          icon:"edp",               lat:38.717,  lng:-9.142,   country:"Portugal",           flag:"🇵🇹", sector:"Energy",          hq:"Lisbon",                 founded:1976, revenue:"$17B"   },
+
+  // ── Austria ──
+  { name:"Red Bull",     icon:"redbull",           lat:47.797,  lng:12.997,   country:"Austria",            flag:"🇦🇹", sector:"Beverage",        hq:"Fuschl am See",          founded:1984, revenue:"$10B"   },
+
+  // ── Belgium ──
+  { name:"AB InBev",     icon:"abinbev",           lat:50.881,  lng:4.718,    country:"Belgium",            flag:"🇧🇪", sector:"Beverage",        hq:"Leuven",                 founded:2008, revenue:"$59B"   },
+
+  // ── Luxembourg ──
+  { name:"ArcelorMittal",icon:"arcelormittal",     lat:49.611,  lng:6.131,    country:"Luxembourg",         flag:"🇱🇺", sector:"Steel",           hq:"Luxembourg City",        founded:2006, revenue:"$79B"   },
+
+  // ── Czech Republic ──
+  { name:"Škoda",        icon:"skoda",             lat:50.376,  lng:14.905,   country:"Czech Republic",     flag:"🇨🇿", sector:"Automotive",      hq:"Mladá Boleslav",         founded:1895, revenue:"$22B"   },
+
+  // ── Slovakia ──
+  { name:"Slovnaft",     icon:"slovnaft",          lat:48.143,  lng:17.157,   country:"Slovakia",           flag:"🇸🇰", sector:"Energy",          hq:"Bratislava",             founded:1895, revenue:"$4.1B"  },
+
+  // ── Hungary ──
+  { name:"MOL",          icon:"mol",               lat:47.498,  lng:19.040,   country:"Hungary",            flag:"🇭🇺", sector:"Energy",          hq:"Budapest",               founded:1991, revenue:"$24B"   },
+
+  // ── Romania ──
+  { name:"OMV Petrom",   icon:"omv",               lat:44.432,  lng:26.101,   country:"Romania",            flag:"🇷🇴", sector:"Energy",          hq:"Bucharest",              founded:1840, revenue:"$8.9B"  },
+
+  // ── Bulgaria ──
+  { name:"Lukoil Bulgaria",icon:"lukoil",          lat:42.698,  lng:23.322,   country:"Bulgaria",           flag:"🇧🇬", sector:"Energy",          hq:"Sofia",                  founded:2000, revenue:"$1.2B"  },
+
+  // ── Croatia ──
+  { name:"INA",          icon:"ina",               lat:45.815,  lng:15.982,   country:"Croatia",            flag:"🇭🇷", sector:"Energy",          hq:"Zagreb",                 founded:1964, revenue:"$4.5B"  },
+
+  // ── Serbia ──
+  { name:"NIS",          icon:"nis",               lat:44.821,  lng:20.461,   country:"Serbia",             flag:"🇷🇸", sector:"Energy",          hq:"Belgrade",               founded:2005, revenue:"$3.2B"  },
+
+  // ── Slovenia ──
+  { name:"Gorenje",      icon:"gorenje",           lat:46.256,  lng:14.358,   country:"Slovenia",           flag:"🇸🇮", sector:"Appliances",      hq:"Velenje",                founded:1950, revenue:"$1.4B"  },
+
+  // ── Bosnia ──
+  { name:"BH Telecom",   icon:"bhtelekom",         lat:43.848,  lng:18.356,   country:"Bosnia",             flag:"🇧🇦", sector:"Telecom",         hq:"Sarajevo",               founded:1994, revenue:"$0.5B"  },
+
+  // ── North Macedonia ──
+  { name:"Makedonski Telekom",icon:"makedonskitelekom",lat:41.996,lng:21.431, country:"North Macedonia",    flag:"🇲🇰", sector:"Telecom",         hq:"Skopje",                 founded:1997, revenue:"$0.2B"  },
+
+  // ── Albania ──
+  { name:"Albtelecom",   icon:"albtelecom",        lat:41.329,  lng:19.819,   country:"Albania",            flag:"🇦🇱", sector:"Telecom",         hq:"Tirana",                 founded:1912, revenue:"$0.2B"  },
+
+  // ── Georgia ──
+  { name:"Bank of Georgia",icon:"bankofgeorgia",   lat:41.694,  lng:44.834,   country:"Georgia",            flag:"🇬🇪", sector:"Finance",         hq:"Tbilisi",                founded:1994, revenue:"$0.7B"  },
+
+  // ── Armenia ──
+  { name:"Ameriabank",   icon:"ameriabank",        lat:40.179,  lng:44.514,   country:"Armenia",            flag:"🇦🇲", sector:"Finance",         hq:"Yerevan",                founded:1910, revenue:"$0.3B"  },
+
+  // ── Azerbaijan ──
+  { name:"SOCAR",        icon:"socar",             lat:40.409,  lng:49.867,   country:"Azerbaijan",         flag:"🇦🇿", sector:"Energy",          hq:"Baku",                   founded:1992, revenue:"$13B"   },
+
+  // ── Mongolia ──
+  { name:"Erdenes",      icon:"erdenes",           lat:47.921,  lng:106.921,  country:"Mongolia",           flag:"🇲🇳", sector:"Mining",          hq:"Ulaanbaatar",            founded:2007, revenue:"$1.8B"  },
+
+  // ── Myanmar ──
+  { name:"MPT",          icon:"mpt",               lat:16.871,  lng:96.196,   country:"Myanmar",            flag:"🇲🇲", sector:"Telecom",         hq:"Yangon",                 founded:1857, revenue:"$0.4B"  },
+
+  // ── Cambodia ──
+  { name:"Smart Axiata", icon:"smartaxiata",       lat:11.562,  lng:104.916,  country:"Cambodia",           flag:"🇰🇭", sector:"Telecom",         hq:"Phnom Penh",             founded:1996, revenue:"$0.2B"  },
+
+  // ── Laos ──
+  { name:"Unitel",       icon:"unitel",            lat:17.964,  lng:102.614,  country:"Laos",               flag:"🇱🇦", sector:"Telecom",         hq:"Vientiane",              founded:2009, revenue:"$0.2B"  },
+
+  // ── Brunei ──
+  { name:"BIBD",         icon:"bibd",              lat:4.940,   lng:114.948,  country:"Brunei",             flag:"🇧🇳", sector:"Finance",         hq:"Bandar Seri Begawan",    founded:1993, revenue:"$0.3B"  },
+
+  // ── Maldives ──
+  { name:"Dhiraagu",     icon:"dhiraagu",          lat:4.175,   lng:73.509,   country:"Maldives",           flag:"🇲🇻", sector:"Telecom",         hq:"Malé",                   founded:1988, revenue:"$0.1B"  },
+
+  // ── Bhutan ──
+  { name:"B-Mobile",     icon:"bmobile",           lat:27.466,  lng:89.642,   country:"Bhutan",             flag:"🇧🇹", sector:"Telecom",         hq:"Thimphu",                founded:2003, revenue:"$0.1B"  },
+
+  // ── Afghanistan ──
+  { name:"Roshan",       icon:"roshan",            lat:34.520,  lng:69.176,   country:"Afghanistan",        flag:"🇦🇫", sector:"Telecom",         hq:"Kabul",                  founded:2003, revenue:"$0.4B"  },
+
+  // ── Yemen ──
+  { name:"Yemen Mobile", icon:"yemenmobile",       lat:15.369,  lng:44.191,   country:"Yemen",              flag:"🇾🇪", sector:"Telecom",         hq:"Sana'a",                 founded:2000, revenue:"$0.2B"  },
+
+  // ── Syria ──
+  { name:"Syriatel",     icon:"syriatel",          lat:33.510,  lng:36.291,   country:"Syria",              flag:"🇸🇾", sector:"Telecom",         hq:"Damascus",               founded:2000, revenue:"$0.4B"  },
+
+  // ── Lebanon ──
+  { name:"Touch",        icon:"touch",             lat:33.888,  lng:35.495,   country:"Lebanon",            flag:"🇱🇧", sector:"Telecom",         hq:"Beirut",                 founded:2004, revenue:"$0.6B"  },
+
+  // ── Jordan ──
+  { name:"Zain Jordan",  icon:"zain",              lat:31.963,  lng:35.930,   country:"Jordan",             flag:"🇯🇴", sector:"Telecom",         hq:"Amman",                  founded:1995, revenue:"$0.5B"  },
+
+  // ── Oman ──
+  { name:"Ooredoo Oman", icon:"ooredoo",           lat:23.614,  lng:58.593,   country:"Oman",               flag:"🇴🇲", sector:"Telecom",         hq:"Muscat",                 founded:2004, revenue:"$0.7B"  },
+
+  // ── Bahrain ──
+  { name:"Batelco",      icon:"batelco",           lat:26.215,  lng:50.586,   country:"Bahrain",            flag:"🇧🇭", sector:"Telecom",         hq:"Manama",                 founded:1981, revenue:"$0.5B"  },
+
+  // ── Kuwait ──
+  { name:"Zain Kuwait",  icon:"zain",              lat:29.367,  lng:47.978,   country:"Kuwait",             flag:"🇰🇼", sector:"Telecom",         hq:"Kuwait City",            founded:1983, revenue:"$1.7B"  },
+];
+
+// ─────────────────────────────────────────────────────────────
+//  POPUP LOGIC
+// ─────────────────────────────────────────────────────────────
+const popup = document.getElementById('popup');
+let popupTimeout;
+
+function showPopup(brand, x, y) {
+  clearTimeout(popupTimeout);
+
+  document.getElementById('popup-logo').src = `https://cdn.simpleicons.org/${brand.icon}`;
+  document.getElementById('popup-logo').alt = brand.name;
+  document.getElementById('popup-name').textContent = brand.name;
+  document.getElementById('popup-country').textContent = `${brand.flag} ${brand.country}`;
+  document.getElementById('popup-sector').textContent = brand.sector;
+  document.getElementById('popup-hq').textContent = brand.hq;
+  document.getElementById('popup-founded').textContent = brand.founded;
+  document.getElementById('popup-revenue').textContent = brand.revenue;
+
+  const W = 260, H = 200;
+  const left = Math.min(x + 18, window.innerWidth  - W - 16);
+  const top  = Math.min(y + 18, window.innerHeight - H - 16);
+  popup.style.left = left + 'px';
+  popup.style.top  = top  + 'px';
+
+  popup.classList.add('visible');
+}
+
+function hidePopup() {
+  popupTimeout = setTimeout(() => {
+    popup.classList.remove('visible');
+  }, 120);
+}
+
+popup.addEventListener('mouseenter', () => clearTimeout(popupTimeout));
+popup.addEventListener('mouseleave', hidePopup);
+
+// ─────────────────────────────────────────────────────────────
+//  GLOBE
+// ─────────────────────────────────────────────────────────────
+const world = Globe()
+  (document.getElementById('globe-container'))
+  .width(window.innerWidth)
+  .height(window.innerHeight)
+  .backgroundColor('rgba(0,0,0,0)')
+  .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
+  .backgroundImageUrl('https://unpkg.com/three-globe/example/img/night-sky.png')
+  .showAtmosphere(true)
+  .atmosphereColor('rgba(70,160,255,0.7)')
+  .atmosphereAltitude(0.22)
+  .htmlElementsData(brands)
+  .htmlLat('lat')
+  .htmlLng('lng')
+  .htmlAltitude(0)
+  .htmlElement(brand => {
+    const el = document.createElement('div');
+    el.className = 'brand-marker';
+    el.title = brand.name;
+    el.dataset.lat = brand.lat;
+    el.dataset.lng = brand.lng;
+
+    const img = document.createElement('img');
+    img.src = `https://cdn.simpleicons.org/${brand.icon}`;
+    img.alt = brand.name;
+    img.draggable = false;
+    img.addEventListener('error', () => {
+      img.style.display = 'none';
+      const initials = brand.name.split(' ').map(w => w[0]).join('').slice(0, 2);
+      const span = document.createElement('span');
+      span.className = 'brand-initials';
+      span.textContent = initials;
+      el.appendChild(span);
+    });
+
+    el.appendChild(img);
+
+    el.addEventListener('mouseenter', e => {
+      showPopup(brand, e.clientX, e.clientY);
+    });
+
+    el.addEventListener('mousemove', e => {
+      showPopup(brand, e.clientX, e.clientY);
+    });
+
+    el.addEventListener('mouseleave', () => {
+      hidePopup();
+    });
+
+    return el;
+  });
+
+// Auto-rotate by default; pause while dragging, resume 2s after release
+const controls = world.controls();
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.5;
+controls.enableDamping = true;
+controls.dampingFactor = 0.1;
+
+let resumeTimer;
+controls.addEventListener('start', () => {
+  clearTimeout(resumeTimer);
+  controls.autoRotate = false;
+});
+controls.addEventListener('end', () => {
+  resumeTimer = setTimeout(() => { controls.autoRotate = true; }, 2000);
+});
+
+document.getElementById('globe-container').addEventListener('mouseleave', hidePopup);
+
+// ── Cull markers on the back side of the globe ──
+(function cullBacksideMarkers() {
+  const cam = world.camera();
+  if (cam) {
+    const cp = cam.position;
+    const dist = Math.sqrt(cp.x * cp.x + cp.y * cp.y + cp.z * cp.z);
+    const gr = world.getGlobeRadius();
+    // Geometric limb: dot product at the tangent from camera = r/d
+    const limb = gr / dist + 0.06; // small margin keeps markers off the atmosphere edge
+    const fadeEnd = limb + 0.12;
+
+    document.querySelectorAll('.brand-marker').forEach(el => {
+      const lat = parseFloat(el.dataset.lat) * Math.PI / 180;
+      const lng = parseFloat(el.dataset.lng) * Math.PI / 180;
+      const px = Math.cos(lat) * Math.sin(lng);
+      const py = Math.sin(lat);
+      const pz = Math.cos(lat) * Math.cos(lng);
+      const dot = (px * cp.x + py * cp.y + pz * cp.z) / dist;
+      const alpha = dot < limb ? 0 : dot > fadeEnd ? 1 : (dot - limb) / (fadeEnd - limb);
+      el.style.opacity = alpha >= 1 ? '' : String(alpha.toFixed(3));
+      el.style.pointerEvents = dot > limb ? 'auto' : 'none';
+    });
+  }
+  requestAnimationFrame(cullBacksideMarkers);
+})();
+
+// ── Country labels ──
+const countries = [
+  { name:"USA",           lat: 39.5,  lng: -98.4  },
+  { name:"Canada",        lat: 56.1,  lng:-106.3  },
+  { name:"Mexico",        lat: 23.6,  lng:-102.6  },
+  { name:"Brazil",        lat:-14.2,  lng: -51.9  },
+  { name:"Argentina",     lat:-38.4,  lng: -63.6  },
+  { name:"Colombia",      lat:  4.6,  lng: -74.3  },
+  { name:"Peru",          lat: -9.2,  lng: -75.0  },
+  { name:"Chile",         lat:-35.7,  lng: -71.5  },
+  { name:"Venezuela",     lat:  6.4,  lng: -66.6  },
+  { name:"UK",            lat: 54.4,  lng:  -3.4  },
+  { name:"France",        lat: 46.2,  lng:   2.2  },
+  { name:"Germany",       lat: 51.2,  lng:  10.5  },
+  { name:"Italy",         lat: 41.9,  lng:  12.6  },
+  { name:"Spain",         lat: 40.5,  lng:  -3.7  },
+  { name:"Portugal",      lat: 39.4,  lng:  -8.2  },
+  { name:"Sweden",        lat: 62.0,  lng:  17.0  },
+  { name:"Norway",        lat: 64.5,  lng:  17.9  },
+  { name:"Finland",       lat: 64.0,  lng:  26.0  },
+  { name:"Poland",        lat: 51.9,  lng:  19.1  },
+  { name:"Ukraine",       lat: 49.0,  lng:  31.2  },
+  { name:"Turkey",        lat: 39.0,  lng:  35.2  },
+  { name:"Greece",        lat: 39.1,  lng:  21.8  },
+  { name:"Romania",       lat: 45.9,  lng:  25.0  },
+  { name:"Netherlands",   lat: 52.1,  lng:   5.3  },
+  { name:"Switzerland",   lat: 46.8,  lng:   8.2  },
+  { name:"Russia",        lat: 61.5,  lng: 105.3  },
+  { name:"Kazakhstan",    lat: 48.0,  lng:  66.9  },
+  { name:"China",         lat: 35.9,  lng: 104.2  },
+  { name:"India",         lat: 20.6,  lng:  78.9  },
+  { name:"Japan",         lat: 36.2,  lng: 138.3  },
+  { name:"South Korea",   lat: 35.9,  lng: 127.8  },
+  { name:"Pakistan",      lat: 30.4,  lng:  69.3  },
+  { name:"Bangladesh",    lat: 23.7,  lng:  90.4  },
+  { name:"Indonesia",     lat: -2.5,  lng: 118.0  },
+  { name:"Thailand",      lat: 15.9,  lng: 101.0  },
+  { name:"Vietnam",       lat: 14.1,  lng: 108.3  },
+  { name:"Philippines",   lat: 12.9,  lng: 121.8  },
+  { name:"Malaysia",      lat:  4.2,  lng: 102.0  },
+  { name:"Myanmar",       lat: 21.9,  lng:  96.0  },
+  { name:"Australia",     lat:-25.3,  lng: 133.8  },
+  { name:"New Zealand",   lat:-40.9,  lng: 174.9  },
+  { name:"Saudi Arabia",  lat: 23.9,  lng:  45.1  },
+  { name:"Iran",          lat: 32.4,  lng:  53.7  },
+  { name:"Iraq",          lat: 33.2,  lng:  43.7  },
+  { name:"Egypt",         lat: 26.8,  lng:  30.8  },
+  { name:"Algeria",       lat: 28.0,  lng:   1.7  },
+  { name:"Morocco",       lat: 31.8,  lng:  -7.1  },
+  { name:"Nigeria",       lat:  9.1,  lng:   8.7  },
+  { name:"Ethiopia",      lat:  9.1,  lng:  40.5  },
+  { name:"South Africa",  lat:-30.6,  lng:  22.9  },
+  { name:"Kenya",         lat: -0.0,  lng:  37.9  },
+  { name:"Tanzania",      lat: -6.4,  lng:  34.9  },
+  { name:"DR Congo",      lat: -4.0,  lng:  21.8  },
+  { name:"Afghanistan",   lat: 33.9,  lng:  67.7  },
+  { name:"Uzbekistan",    lat: 41.4,  lng:  64.6  },
+];
+
+world
+  .labelsData(countries)
+  .labelLat('lat')
+  .labelLng('lng')
+  .labelText('name')
+  .labelSize(1.2)
+  .labelColor(() => 'rgba(255,255,255,0.85)')
+  .labelResolution(3)
+  .labelAltitude(0.01)
+  .labelDotRadius(0.3)
+  .labelDotOrientation(() => 'bottom');
+
+// ── Cloud sphere — derive THREE from Globe.gl's own scene objects ──
+world.onGlobeReady(() => {
+  const scene = world.scene();
+  let globeMesh = null;
+  scene.traverse(o => { if (!globeMesh && o.isMesh) globeMesh = o; });
+  if (!globeMesh) return;
+
+  // Reuse the same Three.js constructors Globe.gl already uses internally
+  const MeshCtor     = globeMesh.constructor;
+  const GeoCtor      = globeMesh.geometry.constructor;
+  const MatCtor      = globeMesh.material.constructor;
+  const TexCtor      = globeMesh.material.map && globeMesh.material.map.constructor;
+  if (!TexCtor) return;
+
+  const r = world.getGlobeRadius();
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = () => {
+    const tex = new TexCtor(img);
+    tex.needsUpdate = true;
+    const mesh = new MeshCtor(
+      new GeoCtor(r * 1.006, 64, 64),
+      new MatCtor({ map: tex, transparent: true, opacity: 0.82, depthWrite: false })
+    );
+    scene.add(mesh);
+    (function spin() { requestAnimationFrame(spin); mesh.rotation.y += 0.00025; })();
+  };
+  img.src = 'https://unpkg.com/three-globe/example/img/clouds.png';
+});
+
+// ─────────────────────────────────────────────────────────────
+//  SEARCH
+// ─────────────────────────────────────────────────────────────
+const searchInput   = document.getElementById('search-input');
+const searchResults = document.getElementById('search-results');
+const searchClear   = document.getElementById('search-clear');
+
+function renderResults(query) {
+  const q = query.trim().toLowerCase();
+  searchResults.innerHTML = '';
+
+  if (!q) {
+    searchResults.classList.remove('open');
+    searchClear.classList.remove('visible');
+    return;
+  }
+
+  searchClear.classList.add('visible');
+
+  const hits = brands.filter(b =>
+    b.name.toLowerCase().includes(q) ||
+    b.country.toLowerCase().includes(q)
+  ).slice(0, 8);
+
+  if (!hits.length) {
+    searchResults.innerHTML = `<div class="sr-empty">No results for "<strong style="color:rgba(255,255,255,0.6)">${query}</strong>"</div>`;
+    searchResults.classList.add('open');
+    return;
+  }
+
+  hits.forEach(brand => {
+    const item = document.createElement('div');
+    item.className = 'sr-item';
+
+    const logoWrap = document.createElement('div');
+    logoWrap.className = 'sr-logo';
+    const img = document.createElement('img');
+    img.src = `https://cdn.simpleicons.org/${brand.icon}`;
+    img.alt = brand.name;
+    img.addEventListener('error', () => {
+      img.style.display = 'none';
+      const sp = document.createElement('span');
+      sp.className = 'sr-logo-initials';
+      sp.textContent = brand.name.split(' ').map(w => w[0]).join('').slice(0, 2);
+      logoWrap.appendChild(sp);
+    });
+    logoWrap.appendChild(img);
+
+    const info = document.createElement('div');
+    info.className = 'sr-info';
+    info.innerHTML = `<div class="sr-name">${brand.name}</div><div class="sr-meta">${brand.flag} ${brand.country} &nbsp;·&nbsp; ${brand.sector}</div>`;
+
+    item.appendChild(logoWrap);
+    item.appendChild(info);
+
+    item.addEventListener('click', () => {
+      world.pointOfView({ lat: brand.lat, lng: brand.lng, altitude: 1.6 }, 1200);
+      setTimeout(() => {
+        showPopup(brand, window.innerWidth / 2, window.innerHeight / 2);
+      }, 1300);
+      searchInput.value = '';
+      searchResults.classList.remove('open');
+      searchClear.classList.remove('visible');
+      searchInput.blur();
+    });
+
+    searchResults.appendChild(item);
+  });
+
+  searchResults.classList.add('open');
+}
+
+searchInput.addEventListener('input', e => renderResults(e.target.value));
+
+searchClear.addEventListener('click', () => {
+  searchInput.value = '';
+  searchResults.classList.remove('open');
+  searchClear.classList.remove('visible');
+  searchInput.focus();
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    searchInput.value = '';
+    searchResults.classList.remove('open');
+    searchClear.classList.remove('visible');
+    searchInput.blur();
+  }
+});
+
+document.addEventListener('click', e => {
+  if (!document.getElementById('search-wrap').contains(e.target)) {
+    searchResults.classList.remove('open');
+  }
+});
+
+
+// Initial point of view
+world.pointOfView({ lat: 20, lng: 10, altitude: 2.2 });
+
+// Responsive
+window.addEventListener('resize', () => {
+  world.width(window.innerWidth).height(window.innerHeight);
+});
+</script>
+</body>
+</html>
